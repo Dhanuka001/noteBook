@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IoAddSharp, IoSearch } from "react-icons/io5";
 import ColorDots from './ColorDots';
 import NoteCard from './NoteCard';
+import axios from 'axios';
 
 function Home() {
   const [showDots, setShowDots] = useState(false);
@@ -14,9 +15,32 @@ function Home() {
     setNotes([...notes, newNote]);
   };
 
-  const handleDeleteNote = (id) => {
-    setNotes(notes.filter((note) => note.id !== id));
+  const handleDeleteNote = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/notes/${id}`);
+  
+      // Update the local state to remove the deleted note
+      setNotes(notes.filter((note) => note._id !== id));
+    } catch (error) {
+      console.error("Error deleting note:", error);
+    }
   };
+
+  //fetch notes
+  useEffect(() => {
+    const fetchNotes = async () => {
+      try{
+        const response = await axios.get('http://localhost:5000/notes');
+        setNotes(response.data)
+        console.log(response.data);
+        console.log(notes);
+      }catch(err){
+        console.log("Error fetching notes", err);
+      }
+    };
+    fetchNotes();
+  },[]);
+
 
   return (
     <div className="flex h-screen">
@@ -52,11 +76,14 @@ function Home() {
         >
           {notes.map((note) => (
             <NoteCard
-              key={note.id}
+              key={note._id}
+              id={note._id}
               color={note.color}
-              onDelete={() => handleDeleteNote(note.id)}
+              content={note.content}
+              onDelete={() => handleDeleteNote(note._id)}
             />
           ))}
+
         </div>
       </div>
     </div>
